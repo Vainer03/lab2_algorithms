@@ -34,6 +34,16 @@ y
 '''
 
 
+def generated_testing_rectangles(n, rectangles):
+    for i in range(n):
+        rectangles.append([10*i, 10*i, 10*(2*n - i), 10*(2*n - i)])
+    return rectangles
+
+
+def generated_testing_points(m, points):
+    for i in range(m):
+        points.append([pow(87178291199*i, 31) % (20*m), pow(39916801*i, 31) % (20*m)])
+
 # the first algorithm and the auxiliary functions for it
 def first_algorithm(rectangles, points):
     res = ""
@@ -91,6 +101,7 @@ def second_algorithm(rectangles, points):
         for x in range(x_compressed.index(rectangle[0]), x_compressed.index(rectangle[2])):
             for y in range(y_compressed.index(rectangle[1]), y_compressed.index(rectangle[3])):
                 matrix[x][y] += 1
+    # print_matrix_turned(matrix)
 
     for point in points:
         intersections = 0
@@ -106,21 +117,33 @@ def second_algorithm(rectangles, points):
 # the main function
 if __name__ == '__main__':
     print("Welcome to the Laboratory Task №2!")
-    n = int(input())
+    # n = int(input())
+    n = 15
     Rectangles = []
-    for i in range(n):
-        Rectangles.append(list(map(int, input().split())))
+    generated_testing_rectangles(n, Rectangles)
+    # for i in range(n):
+    #    Rectangles.append(list(map(int, input().split())))
 
-    m = int(input())
+    # m = int(input())
+    m = 10
     Points = []
-    for i in range(m):
-        Points.append(list(map(int, input().split())))
+    generated_testing_points(m, Points)
+    # for i in range(m):
+    #    Points.append(list(map(int, input().split())))
 
     first_algorithm(Rectangles, Points)
     second_algorithm(Rectangles, Points)
 
 
 '''
+Для тестового набора прямоугольников, 
+рекомендуется использовать набор вложенных друг-в-друга с координатами с шагом больше 1, 
+например {(10i, 10i), (10*(2N-i), 10*(2N-i))}. 
+
+Для тестового набора точек, рекомендуется использовать неслучайный набор распределенных 
+более-менее равномерно по ненулевому пересечению прямоугольников, 
+например хэш функции от i с разным базисом для x и y. (p*i)^31%(20*N), p-большое простое, разное для x и y
+
 4
 2 2 6 8
 5 4 9 10
