@@ -1,3 +1,6 @@
+import copy
+import time
+
 # =============== Auxiliary functions for testing ======================
 # this function prints out the matrix in a programmer's way
 def print_matrix(matrix):
@@ -8,10 +11,10 @@ def print_matrix(matrix):
 
 
 '''
-0 y y y y y y y
-x
-x
-x
+0 1 2 3 4 5 y
+1
+2
+3
 x
 '''
 
@@ -26,11 +29,15 @@ def print_matrix_turned(matrix):
 
 '''
 y 
-y
-y
-y
-0 x x x x x x x
+3
+2
+1
+0 1 2 3 4 5 x
 '''
+
+
+def get_time(start,finish):
+    return int(1000000*(finish - start))
 
 
 def generated_testing_rectangles(n, rectangles):
@@ -42,10 +49,12 @@ def generated_testing_rectangles(n, rectangles):
 def generated_testing_points(m, points):
     for i in range(m):
         points.append([pow(87178291199 * i, 31) % (20 * m), pow(39916801 * i, 31) % (20 * m)])
+    return points
 
 
 # the first algorithm and the auxiliary functions for it
 def first_algorithm(rectangles, points):
+    start = time.perf_counter()
     res = ""
     for point in points:
         intersections = 0
@@ -61,6 +70,8 @@ def first_algorithm(rectangles, points):
         res = res + str(intersections) + " "
     res = res[0: len(res) - 1]
     print(res)
+    finish = time.perf_counter()
+    return get_time(start, finish)
 
 
 # the second algorithm and the auxiliary functions for it
@@ -79,6 +90,7 @@ def binary_search(coord_compressed, target, low, high):
 
 
 def second_algorithm(rectangles, points):
+    start = time.perf_counter()
     res = ""
     # creating the sets
     x_compressed, y_compressed = set(), set()
@@ -115,6 +127,8 @@ def second_algorithm(rectangles, points):
         res = res + str(intersections) + " "
     res = res[0: len(res) - 1]
     print(res)
+    finish = time.perf_counter()
+    return get_time(start, finish)
 
 
 # the third algorithm and the auxiliary functions for it
@@ -177,6 +191,7 @@ def copy_tree(tree1, tree2):
 
 
 def third_algorithm(rectangles, points):
+    start = time.perf_counter()
     res = ""
     # creating the sets
     x_compressed, y_compressed = set(), set()
@@ -221,30 +236,18 @@ def third_algorithm(rectangles, points):
     tree = Tree(depth)
     tree.build_tree()
 
-    # '''
-    for k, v in corners_dict.items():
-        print(k, " - ", v)
-
-    for i in range(len(corners)):
-        if corners[i] in corners_dict:
-            print(corners[i], " --> +1")
-        else:
-            print(corners[i], " --> -1")
-
-    # for i in range(len(tree.tree)):
-    #     print(i, ": left index - ", tree.tree[i].left_i, " right index - ", tree.tree[i].right_i, " modifier - ", tree.tree[i].modifier)
-
     for i in range(len(corners)):
         if corners[i] in corners_dict:
             add_to_tree(tree, 0, corners[i][1], corners_dict[corners[i]][1], 1)
-            copy_tree(tree, persistent_tree[i])
+            copy_tree(tree, persistent_tree[corners[i][0]])
         else:
             end_key = 0
             for k, v in corners_dict.items():
                 if v == corners[i]:
                     end_key = k
+                    break
             add_to_tree(tree, 0, end_key[1], corners[i][1], -1)
-            copy_tree(tree, persistent_tree[i])
+            copy_tree(tree, persistent_tree[corners[i][0]])
 
     for point in points:
         intersections = 0
@@ -254,49 +257,81 @@ def third_algorithm(rectangles, points):
             intersections = get_leaf(persistent_tree[x], y)
         res = res + str(intersections) + " "
 
-    for i in range(len(persistent_tree)):
-        for j in range(len(persistent_tree[i].tree)):
-            print(j, ": left index - ", persistent_tree[i].tree[j].left_i, " right index - ",
-                  persistent_tree[i].tree[j].right_i, " modifier - ", persistent_tree[i].tree[j].modifier)
-        print("")
-    # '''
-
     res = res[0: len(res) - 1]
     print(res)
+    finish = time.perf_counter()
+    return get_time(start, finish)
+
+
+def testing(t, k):
+    results = [0] * k
+    for i in range(k):
+        results[i] = [0]*4
+        results[i][0] = str(i+1) + '). '
+
+    for i in range(k):
+        rectangles = []
+        generated_testing_rectangles(2**i, rectangles)
+        points = []
+        generated_testing_points(2**(i+1), points)
+        for j in range(t):
+            results[i][1] += first_algorithm(rectangles, points)
+            results[i][2] += second_algorithm(copy.deepcopy(rectangles), points)
+            results[i][3] += third_algorithm(copy.deepcopy(rectangles), points)
+        results[i][1] //= t
+        results[i][2] //= t
+        results[i][3] //= t
+    return results
+
+
+def user_interaction_main_menu():
+    print("Enter the number of the mode")
+    print("0 - Entering the coordinates manually")
+    print("1 - Generated coordinates for both rectangles and points but numbers are entered manually")
+    print("2 - Generated and automated testing")
+    print("3 - Exit")
+    mode = input()
+    match mode:
+        case "0":
+            n = int(input())
+            rectangles = []
+            for i in range(n):
+                rectangles.append(list(map(int, input().split())))
+            m = int(input())
+            points = []
+            for i in range(m):
+                points.append(list(map(int, input().split())))
+
+            first_algorithm(copy.deepcopy(rectangles), copy.deepcopy(points))
+            second_algorithm(copy.deepcopy(rectangles), copy.deepcopy(points))
+            third_algorithm(copy.deepcopy(rectangles), copy.deepcopy(points))
+        case "1":
+            n = int(input("Enter the number of rectangles: "))
+            rectangles = []
+            generated_testing_rectangles(n, rectangles)
+            m = int(input("Enter the number of points: "))
+            points = []
+            generated_testing_points(m, points)
+
+            first_algorithm(copy.deepcopy(rectangles), copy.deepcopy(points))
+            second_algorithm(copy.deepcopy(rectangles), copy.deepcopy(points))
+            third_algorithm(copy.deepcopy(rectangles), copy.deepcopy(points))
+        case "2":
+            res = testing(100, 8)
+            for i in res:
+                print(i[0], i[1], i[2], i[3])
+        case "3":
+            exit()
+        case _:
+            print("I'm not quite sure what you want me to do...")
+            user_interaction_main_menu()
 
 
 # the main function
 if __name__ == '__main__':
-    mode = 0
-    Rectangles = []
-    Points = []
-    if mode == 0:
-        n = int(input())
-        for i in range(n):
-            Rectangles.append(list(map(int, input().split())))
-        m = int(input())
-        for i in range(m):
-            Points.append(list(map(int, input().split())))
-    elif mode == 1:
-        print("Welcome to the Laboratory Task №2!")
-        n = 15
-        generated_testing_rectangles(n, Rectangles)
-        m = 10
-        generated_testing_points(m, Points)
+    print("Welcome to the Laboratory Task №2!")
+    user_interaction_main_menu()
 
-    # first_algorithm(Rectangles, Points)
-    # second_algorithm(Rectangles, Points)
-    third_algorithm(Rectangles, Points)
-    # tree_test = Tree(2)
-    # tree_test.build_tree()
-    # add_to_tree(tree_test, 0, 0, 4, 1)
-    # add_to_tree(tree_test, 0, 0, 3, 1)
-    # add_to_tree(tree_test, 0, 3, 4, 1)
-    # for i in range(len(tree_test.tree)):
-    #     print(i, ": left index - ", tree_test.tree[i].left_i, " right index - ", tree_test.tree[i].right_i,
-    #           " modifier - ", tree_test.tree[i].modifier)
-    # for i in range(pow(2, 2)):
-    #     print(get_leaf(tree_test, i))
 
 '''
 4
@@ -311,6 +346,7 @@ if __name__ == '__main__':
 5 5
 2 10
 
+
 3
 11 15 57 61
 23 21 31 32
@@ -318,7 +354,19 @@ if __name__ == '__main__':
 2
 29 26
 33 17
-3 1
-3 1
 
+
+2
+1 1 7 7
+3 3 5 5
+9
+3 0
+3 1
+3 2
+3 3
+3 4
+3 5
+3 6
+3 7
+3 8
 '''
